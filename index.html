@@ -7,107 +7,88 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 </head>
-<body>
+<body class="p-6">
 
-    <div id="statusModel">Memuat model...</div>
-    <input type="file" id="inputGambar" accept="image/*">
-    <img id="previewGambar" class="hidden" src="" alt="Preview">
-    <div id="placeholderText">Pilih gambar...</div>
-    <div id="hasilKlasifikasi" class="hidden"></div>
-    
+    <div class="mb-8 p-4 border rounded">
+        <h2 class="font-bold mb-2">Prediksi Biaya (Machine Learning)</h2>
+        <input type="number" id="inputUmur" placeholder="Umur" class="border p-2">
+        <input type="number" id="inputBmi" placeholder="BMI" class="border p-2">
+        <button onclick="prediksiRegresi()" class="bg-blue-500 text-white p-2">Prediksi Biaya</button>
+        <div id="hasilRegresi" class="hidden mt-2 p-2 bg-gray-100"></div>
+    </div>
+
+    <div id="statusModel" class="mb-4">Memuat model...</div>
+    <input type="file" id="inputGambar" accept="image/*" class="mb-4">
+    <div id="placeholderText">Silakan pilih gambar</div>
+    <img id="previewGambar" class="hidden max-w-xs" src="" alt="Preview">
+    <button onclick="prediksiGambar()" class="bg-green-500 text-white p-2 mt-4">Prediksi Gambar</button>
+    <div id="hasilKlasifikasi" class="hidden mt-2 p-2 bg-gray-100"></div>
+
     <script>
     window.addEventListener("DOMContentLoaded", () => {
-        
+        let modelCNN = null;
+        let modelRegresi = null;
+
         // =====================
-        // FUNGSI REGRESI
+        // MEMUAT MODEL (CNN & REGRESI)
         // =====================
-        window.prediksiRegresi = function() {
+        async function loadModels() {
+            console.log("TensorFlow :", tf.version.tfjs);
+            try {
+                // Menggunakan URL relatif agar lebih portable
+                modelCNN = await tf.loadLayersModel("./tfjs_model/model.json");
+                // Ganti "./tfjs_model_regresi/model.json" dengan path model regresi Anda
+                // modelRegresi = await tf.loadLayersModel("./tfjs_model_regresi/model.json");
+                
+                console.log("Models Loaded");
+                document.getElementById("statusModel").innerHTML = "✅ Model berhasil dimuat";
+            } catch (err) {
+                console.error("Gagal memuat model:", err);
+                document.getElementById("statusModel").innerHTML = "❌ Gagal memuat model";
+            }
+        }
+
+        if (typeof tf !== "undefined") {
+            loadModels();
+        }
+
+        // =====================
+        // PREDIKSI REGRESI (ML)
+        // =====================
+        window.prediksiRegresi = async function() {
             const umur = parseFloat(document.getElementById("inputUmur").value);
             const bmi = parseFloat(document.getElementById("inputBmi").value);
 
-            if (isNaN(umur) || isNaN(bmi)) {
-                alert("Masukkan angka!");
+            if (isNaN(umur) || isNaN(bmi)) return alert("Masukkan angka!");
+
+            // Jika model belum diintegrasikan, beri peringatan
+            if (!modelRegresi) {
+                alert("Model regresi belum dimuat atau belum diintegrasikan.");
                 return;
             }
 
-            const hasil = -6317.02 + (243.68 * umur) + (345.21 * bmi);
-            const div = document.getElementById("hasilRegresi");
-            div.classList.remove("hidden");
-            div.innerHTML = `Estimasi Biaya<br><span class="text-2xl">$${hasil.toFixed(2)}</span>`;
+            const input = tf.tensor2d([[umur, bmi]]);
+            const prediksi = modelRegresi.predict(input);
+            const nilai = await prediksi.data();
+
+            document.getElementById("hasilRegresi").classList.remove("hidden");
+            document.getElementById("hasilRegresi").innerHTML = `Estimasi: $${nilai[0].toFixed(2)}`;
+            
+            prediksi.dispose();
+            input.dispose();
         };
 
         // =====================
-        // MODEL CNN
-        // =====================
-        let modelCNN = null;
-        const classNames = ["Daisy", "Dandelion", "Roses", "Sunflowers", "Tulips"];
-
-        async function loadModel() {
-            console.log("TensorFlow :", tf.version.tfjs);
-            console.log("Loading model...");
-            
-            try {
-                modelCNN = await tf.loadLayersModel(
-                    "https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json"
-                );
-                console.log("Model Loaded");
-                modelCNN.summary();
-                
-                document.getElementById("statusModel").innerHTML = "✅ Model berhasil dimuat";
-                document.getElementById("statusModel").className = "text-green-600 font-bold";
-            } catch (err) {
-                console.error(err);
-                document.getElementById("statusModel").innerHTML = "❌ " + err.message;
-                document.getElementById("statusModel").className = "text-red-600 font-bold";
-            }
-        }
-
-        if (typeof tf === "undefined") {
-            alert("TensorFlow.js gagal dimuat!");
-            return;
-        }
-        loadModel();
-
-        // =====================
-        // PREVIEW GAMBAR
-        // =====================
-        const input = document.getElementById("inputGambar");
-        const preview = document.getElementById("previewGambar");
-
-        if (input) {
-            input.addEventListener("change", function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    preview.src = event.target.result;
-                    preview.classList.remove("hidden");
-                    const placeholder = document.getElementById("placeholderText");
-                    if (placeholder) placeholder.classList.add("hidden");
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // =====================
-        // PREDIKSI KLASIFIKASI
+        // PREDIKSI KLASIFIKASI (CNN)
         // =====================
         window.prediksiGambar = async function() {
-            if (modelCNN == null) {
-                alert("Model belum selesai dimuat.");
-                return;
-            }
-
-            // Validasi lebih aman
+            const preview = document.getElementById("previewGambar");
+            if (!modelCNN) return alert("Model CNN belum selesai dimuat.");
             if (!preview.src || preview.classList.contains("hidden")) {
-                alert("Pilih gambar terlebih dahulu.");
-                return;
+                return alert("Pilih gambar terlebih dahulu.");
             }
 
-            if (!preview.complete) {
-                await preview.decode();
-            }
+            if (!preview.complete) await preview.decode();
 
             const hasil = tf.tidy(() => {
                 const tensor = tf.browser.fromPixels(preview)
@@ -118,17 +99,15 @@
                 return modelCNN.predict(tensor);
             });
 
-            const probabilitas = await hasil.data();
-            
-            // Bersihkan Memori
+            const prob = await hasil.data();
             hasil.dispose();
-            tf.disposeVariables(); 
 
-            const index = probabilitas.indexOf(Math.max(...probabilitas));
-
+            const classNames = ["Daisy", "Dandelion", "Roses", "Sunflowers", "Tulips"];
+            const index = prob.indexOf(Math.max(...prob));
+            
             const divHasil = document.getElementById("hasilKlasifikasi");
             divHasil.classList.remove("hidden");
-            divHasil.innerHTML = `<b>${classNames[index]}</b><br>Akurasi : ${(probabilitas[index] * 100).toFixed(2)}%`;
+            divHasil.innerHTML = `<b>${classNames[index]}</b><br>Akurasi : ${(prob[index] * 100).toFixed(2)}%`;
         };
     });
     </script>
