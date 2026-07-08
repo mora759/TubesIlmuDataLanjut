@@ -60,7 +60,12 @@
         async function loadModel() {
             try {
                 const modelUrl = `https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json?t=${Date.now()}`;
-                modelCNN = await tf.loadLayersModel(modelUrl);
+                
+                // Menambahkan konfigurasi input eksplisit untuk mengatasi error InputLayer
+                modelCNN = await tf.loadLayersModel(modelUrl, {
+                    inputShape: [128, 128, 3]
+                });
+                
                 document.getElementById('statusModel').innerText = "✅ Model Siap!";
                 document.getElementById('statusModel').className = "text-xs font-bold text-green-600 mb-4";
             } catch (error) {
