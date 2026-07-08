@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tugas Besar Ilmu Data - AI Deployment</title>
-    <!-- Memuat Tailwind CSS untuk tampilan (Tanpa perlu install) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memuat TensorFlow.js untuk klasifikasi gambar -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans p-6 md:p-12">
@@ -19,98 +17,55 @@
 
         <div class="p-6 md:p-8 grid md:grid-cols-2 gap-8">
             
-            <!-- BAGIAN 1: REGRESI LINEAR -->
             <div class="bg-blue-50 p-6 rounded-lg border border-blue-100">
                 <h2 class="text-2xl font-semibold mb-4 text-blue-800">1. Prediksi Biaya Medis</h2>
-                <p class="text-sm text-gray-600 mb-4">Metode: Regresi Linear Berganda</p>
-                
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Umur (Tahun)</label>
-                        <input type="number" id="inputUmur" class="w-full border-gray-300 rounded-md p-2 border" placeholder="Contoh: 30">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">BMI (Body Mass Index)</label>
-                        <input type="number" id="inputBmi" class="w-full border-gray-300 rounded-md p-2 border" placeholder="Contoh: 25.5">
-                    </div>
-                    <button onclick="prediksiRegresi()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition">Hitung Estimasi Biaya</button>
-                    
-                    <div id="hasilRegresi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-blue-900 shadow-inner hidden">
-                        <!-- Hasil regresi muncul di sini -->
-                    </div>
+                    <input type="number" id="inputUmur" class="w-full border-gray-300 rounded-md p-2 border" placeholder="Umur (Tahun)">
+                    <input type="number" id="inputBmi" class="w-full border-gray-300 rounded-md p-2 border" placeholder="BMI">
+                    <button onclick="prediksiRegresi()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition">Hitung Estimasi</button>
+                    <div id="hasilRegresi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-blue-900 shadow-inner hidden"></div>
                 </div>
             </div>
 
-            <!-- BAGIAN 2: KLASIFIKASI GAMBAR -->
             <div class="bg-green-50 p-6 rounded-lg border border-green-100">
                 <h2 class="text-2xl font-semibold mb-4 text-green-800">2. Klasifikasi Gambar</h2>
-                <p class="text-sm text-gray-600 mb-4">Metode: Convolutional Neural Network (CNN)</p>
-                <p id="statusModel" class="text-xs font-semibold text-yellow-600 mb-4">Sedang memuat model AI...</p>
-
+                <p id="statusModel" class="text-xs font-semibold text-yellow-600 mb-4">Memuat model AI...</p>
                 <div class="space-y-4">
-                    <input type="file" id="inputGambar" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200">
-                    
+                    <input type="file" id="inputGambar" accept="image/*" class="w-full text-sm">
                     <div class="flex justify-center border-2 border-dashed border-green-300 p-2 rounded-lg min-h-[150px] bg-white items-center">
                         <img id="previewGambar" class="max-h-40 hidden rounded shadow-sm" alt="Preview">
-                        <span id="placeholderText" class="text-gray-400 text-sm">Pilih gambar untuk melihat preview</span>
+                        <span id="placeholderText" class="text-gray-400 text-sm">Preview Gambar</span>
                     </div>
-
                     <button onclick="prediksiGambar()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-600 transition">Deteksi Gambar</button>
-                    
-                    <div id="hasilKlasifikasi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-green-900 shadow-inner hidden">
-                        <!-- Hasil klasifikasi muncul di sini -->
-                    </div>
+                    <div id="hasilKlasifikasi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-green-900 shadow-inner hidden"></div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT -->
     <script>
-        // ==========================================
-        // 1. LOGIKA REGRESI LINEAR
-        // ==========================================
         function prediksiRegresi() {
             const umur = parseFloat(document.getElementById('inputUmur').value);
             const bmi = parseFloat(document.getElementById('inputBmi').value);
-
-            if (isNaN(umur) || isNaN(bmi)) {
-                alert("Harap masukkan angka yang valid untuk Umur dan BMI!");
-                return;
-            }
-
-            const intercept = -6317.02; 
-            const bobotUmur = 243.68;   
-            const bobotBmi = 345.21;    
-
-            const prediksi = intercept + (bobotUmur * umur) + (bobotBmi * bmi);
-
+            if (isNaN(umur) || isNaN(bmi)) return alert("Masukkan angka!");
+            const prediksi = -6317.02 + (243.68 * umur) + (345.21 * bmi);
             const divHasil = document.getElementById('hasilRegresi');
             divHasil.classList.remove('hidden');
             divHasil.innerHTML = `Estimasi Biaya: <br> <span class="text-2xl">$${prediksi.toFixed(2)}</span>`;
         }
 
-        // ==========================================
-        // 2. LOGIKA KLASIFIKASI GAMBAR (CNN)
-        // ==========================================
         let modelCNN;
-        const classNames = ['Daisy (Bunga Aster)', 'Dandelion', 'Roses (Mawar)', 'Sunflowers (Matahari)', 'Tulips'];
+        const classNames = ['Daisy', 'Dandelion', 'Roses', 'Sunflowers', 'Tulips'];
 
-        // Fungsi memuat model dari folder 'tfjs_model'
         async function loadModel() {
             try {
-                // MENGGUNAKAN JALUR RAW GITHUB agar tidak bergantung pada deployment GitHub Pages
+                // Memuat model dengan jalur raw untuk menghindari masalah cache/deployment
                 const modelUrl = 'https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json';
-                
                 modelCNN = await tf.loadLayersModel(modelUrl);
-                
-                document.getElementById('statusModel').innerText = "✅ Model Gambar Siap Digunakan!";
+                document.getElementById('statusModel').innerText = "✅ Model Siap!";
                 document.getElementById('statusModel').className = "text-xs font-bold text-green-600 mb-4";
             } catch (error) {
-                console.error(error);
-                document.getElementById('statusModel').innerText = "❌ Gagal: " + error.message;
-                document.getElementById('statusModel').className = "text-xs font-bold text-red-600 mb-4";
+                document.getElementById('statusModel').innerText = "❌ Error: Cek sinkronisasi file .bin di GitHub";
             }
         }
         
@@ -118,53 +73,29 @@
 
         const inputGambar = document.getElementById('inputGambar');
         const previewGambar = document.getElementById('previewGambar');
-        const placeholderText = document.getElementById('placeholderText');
 
-        inputGambar.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewGambar.src = e.target.result;
-                    previewGambar.classList.remove('hidden');
-                    placeholderText.classList.add('hidden');
-                }
-                reader.readAsDataURL(file);
+        inputGambar.addEventListener('change', (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewGambar.src = event.target.result;
+                previewGambar.classList.remove('hidden');
+                document.getElementById('placeholderText').classList.add('hidden');
             }
+            reader.readAsDataURL(e.target.files[0]);
         });
 
         async function prediksiGambar() {
-            if (!modelCNN) {
-                alert("Model belum selesai dimuat. Tunggu sebentar.");
-                return;
-            }
-            if (previewGambar.classList.contains('hidden')) {
-                alert("Harap pilih dan masukkan gambar terlebih dahulu.");
-                return;
-            }
-
-            const divHasil = document.getElementById('hasilKlasifikasi');
-            divHasil.classList.remove('hidden');
-            divHasil.innerText = "Memproses...";
-
-            try {
-                const tensor = tf.browser.fromPixels(previewGambar)
-                    .resizeNearestNeighbor([128, 128])
-                    .toFloat()
-                    .div(tf.scalar(255.0))
-                    .expandDims();
-
-                const prediksi = await modelCNN.predict(tensor).data();
-                
-                const indeksTerbesar = prediksi.indexOf(Math.max(...prediksi));
-                const persentase = (prediksi[indeksTerbesar] * 100).toFixed(2);
-                const hasilKelas = classNames[indeksTerbesar];
-
-                divHasil.innerHTML = `Terdeteksi: <br> <span class="text-2xl">${hasilKelas}</span> <br> <span class="text-sm font-normal text-gray-600">Akurasi deteksi: ${persentase}%</span>`;
-            } catch (error) {
-                console.error(error);
-                divHasil.innerHTML = "<span class='text-red-500'>Terjadi kesalahan saat memproses gambar.</span>";
-            }
+            if (!modelCNN) return alert("Model belum siap!");
+            const tensor = tf.browser.fromPixels(previewGambar)
+                .resizeNearestNeighbor([128, 128])
+                .toFloat()
+                .div(tf.scalar(255.0))
+                .expandDims();
+            const prediksi = await modelCNN.predict(tensor).data();
+            const index = prediksi.indexOf(Math.max(...prediksi));
+            const hasil = document.getElementById('hasilKlasifikasi');
+            hasil.classList.remove('hidden');
+            hasil.innerHTML = `Terdeteksi: ${classNames[index]} (${(prediksi[index]*100).toFixed(2)}%)`;
         }
     </script>
 </body>
