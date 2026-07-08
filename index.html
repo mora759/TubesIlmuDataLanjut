@@ -1,158 +1,127 @@
-<script>
+// Pastikan library TensorFlow.js sudah dimuat di <head> sebelum script ini
+// <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 
-function prediksiRegresi(){
+window.addEventListener("DOMContentLoaded", () => {
+    
+    // =====================
+    // FUNGSI REGRESI
+    // =====================
+    window.prediksiRegresi = function() {
+        const umur = parseFloat(document.getElementById("inputUmur").value);
+        const bmi = parseFloat(document.getElementById("inputBmi").value);
 
-    const umur = parseFloat(document.getElementById("inputUmur").value);
-    const bmi = parseFloat(document.getElementById("inputBmi").value);
-
-    if(isNaN(umur) || isNaN(bmi)){
-        alert("Masukkan angka!");
-        return;
-    }
-
-    const hasil = -6317.02 + (243.68 * umur) + (345.21 * bmi);
-
-    const div = document.getElementById("hasilRegresi");
-    div.classList.remove("hidden");
-
-    div.innerHTML = `
-        Estimasi Biaya<br>
-        <span class="text-2xl">$${hasil.toFixed(2)}</span>
-    `;
-}
-
-// =====================
-// MODEL CNN
-// =====================
-
-let modelCNN = null;
-
-const classNames = [
-    "Daisy",
-    "Dandelion",
-    "Roses",
-    "Sunflowers",
-    "Tulips"
-];
-
-async function loadModel(){
-
-    try{
-
-        modelCNN = await tf.loadLayersModel(
-            "https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json"
-        );
-
-        console.log(modelCNN.summary());
-
-        document.getElementById("statusModel").innerHTML="✅ Model berhasil dimuat";
-        document.getElementById("statusModel").className="text-green-600 font-bold";
-
-    }
-
-    catch(err){
-
-        console.error(err);
-
-        document.getElementById("statusModel").innerHTML=
-        "❌ "+err.message;
-
-        document.getElementById("statusModel").className=
-        "text-red-600 font-bold";
-
-    }
-
-}
-
-loadModel();
-
-// =====================
-// PREVIEW GAMBAR
-// =====================
-
-const input=document.getElementById("inputGambar");
-const preview=document.getElementById("previewGambar");
-
-input.addEventListener("change",function(e){
-
-    const file=e.target.files[0];
-
-    if(!file) return;
-
-    const reader=new FileReader();
-
-    reader.onload=function(event){
-
-        preview.onload=function(){
-
-            console.log("Preview siap.");
-
+        if (isNaN(umur) || isNaN(bmi)) {
+            alert("Masukkan angka!");
+            return;
         }
 
-        preview.src=event.target.result;
+        const hasil = -6317.02 + (243.68 * umur) + (345.21 * bmi);
 
-        preview.classList.remove("hidden");
+        const div = document.getElementById("hasilRegresi");
+        div.classList.remove("hidden");
 
-        document.getElementById("placeholderText").classList.add("hidden");
+        div.innerHTML = `
+            Estimasi Biaya<br>
+            <span class="text-2xl">$${hasil.toFixed(2)}</span>
+        `;
+    };
 
+    // =====================
+    // MODEL CNN
+    // =====================
+    let modelCNN = null;
+    const classNames = ["Daisy", "Dandelion", "Roses", "Sunflowers", "Tulips"];
+
+    async function loadModel() {
+        try {
+            // URL menggunakan GitHub Pages agar file .bin terbaca dengan stabil
+            modelCNN = await tf.loadLayersModel(
+                "https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json"
+            );
+
+            console.log("Model berhasil dimuat");
+            document.getElementById("statusModel").innerHTML = "✅ Model berhasil dimuat";
+            document.getElementById("statusModel").className = "text-green-600 font-bold";
+        } catch (err) {
+            console.error(err);
+            document.getElementById("statusModel").innerHTML = "❌ " + err.message;
+            document.getElementById("statusModel").className = "text-red-600 font-bold";
+        }
     }
 
-    reader.readAsDataURL(file);
-
-});
-
-// =====================
-// PREDIKSI
-// =====================
-
-async function prediksiGambar(){
-
-    if(modelCNN==null){
-
-        alert("Model belum selesai dimuat.");
-
-        return;
-
-    }
-
-    if(preview.src==""){
-
-        alert("Pilih gambar terlebih dahulu.");
-
-        return;
-
-    }
-
-    await preview.decode();
-
-    const hasil=tf.tidy(()=>{
-
-        const tensor=tf.browser.fromPixels(preview)
-        .resizeBilinear([128,128])
-        .toFloat()
-        .div(255.0)
-        .expandDims();
-
-        return modelCNN.predict(tensor);
-
+    // Panggil model saat window selesai dimuat
+    window.addEventListener("load", () => {
+        loadModel();
     });
 
-    const probabilitas=await hasil.data();
+    // =====================
+    // PREVIEW GAMBAR
+    // =====================
+    const input = document.getElementById("inputGambar");
+    const preview = document.getElementById("previewGambar");
 
-    hasil.dispose();
+    if (input) {
+        input.addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-    console.log(probabilitas);
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                preview.onload = function() {
+                    console.log("Preview siap.");
+                };
+                preview.src = event.target.result;
+                preview.classList.remove("hidden");
+                const placeholder = document.getElementById("placeholderText");
+                if (placeholder) placeholder.classList.add("hidden");
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
-    const index=probabilitas.indexOf(Math.max(...probabilitas));
+    // =====================
+    // PREDIKSI KLASIFIKASI
+    // =====================
+    window.prediksiGambar = async function() {
+        if (modelCNN == null) {
+            alert("Model belum selesai dimuat.");
+            return;
+        }
 
-    document.getElementById("hasilKlasifikasi").classList.remove("hidden");
+        if (preview.src === "") {
+            alert("Pilih gambar terlebih dahulu.");
+            return;
+        }
 
-    document.getElementById("hasilKlasifikasi").innerHTML=
-    `
-    <b>${classNames[index]}</b><br>
-    Akurasi : ${(probabilitas[index]*100).toFixed(2)}%
-    `;
+        // Pengecekan keamanan sebelum decode gambar
+        if (!preview.complete) {
+            await preview.decode();
+        }
 
-}
+        // Prediksi dengan efisiensi memori (tf.tidy)
+        const hasil = tf.tidy(() => {
+            const tensor = tf.browser.fromPixels(preview)
+                .resizeBilinear([128, 128])
+                .toFloat()
+                .div(255.0)
+                .expandDims();
 
-</script>
+            return modelCNN.predict(tensor);
+        });
+
+        const probabilitas = await hasil.data();
+        
+        // Membersihkan memori secara eksplisit
+        hasil.dispose();
+
+        const index = probabilitas.indexOf(Math.max(...probabilitas));
+
+        const divHasil = document.getElementById("hasilKlasifikasi");
+        divHasil.classList.remove("hidden");
+        divHasil.innerHTML = `
+            <b>${classNames[index]}</b><br>
+            Akurasi : ${(probabilitas[index] * 100).toFixed(2)}%
+        `;
+    };
+
+});
