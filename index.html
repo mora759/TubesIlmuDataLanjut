@@ -103,13 +103,14 @@
         // Fungsi memuat model dari folder 'tfjs_model'
         async function loadModel() {
             try {
-                // Asumsinya folder tfjs_model berada di tempat (direktori) yang sama dengan index.html ini
-                modelCNN = await tf.loadLayersModel('./tfjs_model/model.json');
+                // Penyesuaian path untuk GitHub Pages (menghapus awalan ./)
+                modelCNN = await tf.loadLayersModel('tfjs_model/model.json');
                 document.getElementById('statusModel').innerText = "✅ Model Gambar Siap Digunakan!";
                 document.getElementById('statusModel').className = "text-xs font-bold text-green-600 mb-4";
             } catch (error) {
                 console.error(error);
-                document.getElementById('statusModel').innerText = "❌ Gagal memuat model. Pastikan folder tfjs_model sudah di-upload ke GitHub!";
+                // Menampilkan pesan error asli dari sistem ke layar untuk mempermudah perbaikan
+                document.getElementById('statusModel').innerText = "❌ Gagal: " + error.message;
                 document.getElementById('statusModel').className = "text-xs font-bold text-red-600 mb-4";
             }
         }
