@@ -55,7 +55,7 @@
                         <span id="placeholderText" class="text-gray-400 text-sm">Pilih gambar untuk melihat preview</span>
                     </div>
 
-                    <button onclick="prediksiGambar()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-700 transition">Deteksi Gambar</button>
+                    <button onclick="prediksiGambar()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-600 transition">Deteksi Gambar</button>
                     
                     <div id="hasilKlasifikasi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-green-900 shadow-inner hidden">
                         <!-- Hasil klasifikasi muncul di sini -->
@@ -100,9 +100,8 @@
         // Fungsi memuat model dari folder 'tfjs_model'
         async function loadModel() {
             try {
-                // Trik Cache Buster: Menambahkan waktu saat ini di belakang URL agar browser dipaksa download file versi TERBARU
-                const cacheBuster = new Date().getTime();
-                const modelUrl = 'tfjs_model/model.json?t=' + cacheBuster;
+                // MENGGUNAKAN JALUR RAW GITHUB agar tidak bergantung pada deployment GitHub Pages
+                const modelUrl = 'https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json';
                 
                 modelCNN = await tf.loadLayersModel(modelUrl);
                 
