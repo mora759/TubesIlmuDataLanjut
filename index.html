@@ -11,12 +11,12 @@
 
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="bg-blue-600 text-white p-6 text-center">
-            <h1 class="text-3xl font-bold">Portal AI: Tugas Besar Ilmu Data</h1>
-            <p class="mt-2 opacity-90">Deployment Model Regresi Linear & Klasifikasi Citra Berbasis Web (Serverless)</p>
+            <h1 class="text-3xl font-bold">Portal AI: Tugas Besar</h1>
+            <p class="mt-2 opacity-90">Deployment Model Regresi Linear & Klasifikasi Citra</p>
         </div>
 
         <div class="p-6 md:p-8 grid md:grid-cols-2 gap-8">
-            
+            <!-- Bagian 1: Regresi -->
             <div class="bg-blue-50 p-6 rounded-lg border border-blue-100">
                 <h2 class="text-2xl font-semibold mb-4 text-blue-800">1. Prediksi Biaya Medis</h2>
                 <div class="space-y-4">
@@ -27,6 +27,7 @@
                 </div>
             </div>
 
+            <!-- Bagian 2: Klasifikasi Gambar -->
             <div class="bg-green-50 p-6 rounded-lg border border-green-100">
                 <h2 class="text-2xl font-semibold mb-4 text-green-800">2. Klasifikasi Gambar</h2>
                 <p id="statusModel" class="text-xs font-semibold text-yellow-600 mb-4">Memuat model AI...</p>
@@ -36,7 +37,7 @@
                         <img id="previewGambar" class="max-h-40 hidden rounded shadow-sm" alt="Preview">
                         <span id="placeholderText" class="text-gray-400 text-sm">Preview Gambar</span>
                     </div>
-                    <button onclick="prediksiGambar()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-600 transition">Deteksi Gambar</button>
+                    <button onclick="prediksiGambar()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-700 transition">Deteksi Gambar</button>
                     <div id="hasilKlasifikasi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-green-900 shadow-inner hidden"></div>
                 </div>
             </div>
@@ -44,6 +45,18 @@
     </div>
 
     <script>
+        // Fungsi normalisasi JSON untuk memperbaiki format Keras 3 (snake_case ke camelCase)
+        function toCamelCase(obj) {
+            if (obj === null || typeof obj !== 'object') return obj;
+            if (Array.isArray(obj)) return obj.map(toCamelCase);
+            return Object.keys(obj).reduce((acc, key) => {
+                // Konversi snake_case ke camelCase
+                const camelKey = key.replace(/(_\w)/g, m => m[1].toUpperCase());
+                acc[camelKey] = toCamelCase(obj[key]);
+                return acc;
+            }, {});
+        }
+
         function prediksiRegresi() {
             const umur = parseFloat(document.getElementById('inputUmur').value);
             const bmi = parseFloat(document.getElementById('inputBmi').value);
@@ -60,17 +73,20 @@
         async function loadModel() {
             try {
                 const modelUrl = `https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json?t=${Date.now()}`;
+                const response = await fetch(modelUrl);
+                const rawJson = await response.json();
                 
-                // Menggunakan tf.loadLayersModel tanpa inputShape eksplisit karena model sudah memiliki InputLayer di model.json
-                // Menambahkan penanganan khusus untuk memuat model Keras 3
-                modelCNN = await tf.loadLayersModel(modelUrl);
+                // Normalisasi struktur JSON agar kompatibel dengan tfjs-layers
+                const cleanJson = toCamelCase(rawJson);
+                
+                // Memuat model dari memori yang sudah dinormalisasi
+                modelCNN = await tf.loadLayersModel(tf.io.fromMemory(cleanJson));
                 
                 document.getElementById('statusModel').innerText = "✅ Model Siap!";
                 document.getElementById('statusModel').className = "text-xs font-bold text-green-600 mb-4";
             } catch (error) {
                 console.error("Detail Error:", error);
-                // Jika masih error inputShape, kita mencoba membangun ulang model dengan shape eksplisit sebagai fallback
-                document.getElementById('statusModel').innerText = "❌ Error: " + error.message;
+                document.getElementById('statusModel').innerText = "❌ Gagal: Masalah Kompatibilitas Model";
                 document.getElementById('statusModel').className = "text-xs font-bold text-red-600 mb-4";
             }
         }
@@ -93,7 +109,6 @@
         async function prediksiGambar() {
             if (!modelCNN) return alert("Model belum siap!");
             try {
-                // Konversi gambar ke tensor
                 const tensor = tf.browser.fromPixels(previewGambar)
                     .resizeNearestNeighbor([128, 128])
                     .toFloat()
@@ -107,6 +122,7 @@
                 hasil.innerHTML = `Terdeteksi: ${classNames[index]} (${(prediksi[index]*100).toFixed(2)}%)`;
             } catch (e) {
                 alert("Gagal prediksi: " + e.message);
+                console.error(e);
             }
         }
     </script>
