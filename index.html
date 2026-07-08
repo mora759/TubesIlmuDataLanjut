@@ -1,131 +1,136 @@
-// Pastikan di <head> HTML Anda sudah ada:
-// <script src="https://cdn.tailwindcss.com"></script>
-// <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas Besar AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+</head>
+<body>
 
-window.addEventListener("DOMContentLoaded", () => {
+    <div id="statusModel">Memuat model...</div>
+    <input type="file" id="inputGambar" accept="image/*">
+    <img id="previewGambar" class="hidden" src="" alt="Preview">
+    <div id="placeholderText">Pilih gambar...</div>
+    <div id="hasilKlasifikasi" class="hidden"></div>
     
-    // =====================
-    // FUNGSI REGRESI
-    // =====================
-    window.prediksiRegresi = function() {
-        const umur = parseFloat(document.getElementById("inputUmur").value);
-        const bmi = parseFloat(document.getElementById("inputBmi").value);
-
-        if (isNaN(umur) || isNaN(bmi)) {
-            alert("Masukkan angka!");
-            return;
-        }
-
-        const hasil = -6317.02 + (243.68 * umur) + (345.21 * bmi);
-
-        const div = document.getElementById("hasilRegresi");
-        div.classList.remove("hidden");
-
-        div.innerHTML = `
-            Estimasi Biaya<br>
-            <span class="text-2xl">$${hasil.toFixed(2)}</span>
-        `;
-    };
-
-    // =====================
-    // MODEL CNN
-    // =====================
-    let modelCNN = null;
-    const classNames = ["Daisy", "Dandelion", "Roses", "Sunflowers", "Tulips"];
-
-    async function loadModel() {
-        console.log("TensorFlow :", tf.version.tfjs);
-        console.log("Loading model...");
+    <script>
+    window.addEventListener("DOMContentLoaded", () => {
         
-        try {
-            modelCNN = await tf.loadLayersModel(
-                "https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json"
-            );
+        // =====================
+        // FUNGSI REGRESI
+        // =====================
+        window.prediksiRegresi = function() {
+            const umur = parseFloat(document.getElementById("inputUmur").value);
+            const bmi = parseFloat(document.getElementById("inputBmi").value);
 
-            console.log("Model Loaded");
-            modelCNN.summary();
+            if (isNaN(umur) || isNaN(bmi)) {
+                alert("Masukkan angka!");
+                return;
+            }
+
+            const hasil = -6317.02 + (243.68 * umur) + (345.21 * bmi);
+            const div = document.getElementById("hasilRegresi");
+            div.classList.remove("hidden");
+            div.innerHTML = `Estimasi Biaya<br><span class="text-2xl">$${hasil.toFixed(2)}</span>`;
+        };
+
+        // =====================
+        // MODEL CNN
+        // =====================
+        let modelCNN = null;
+        const classNames = ["Daisy", "Dandelion", "Roses", "Sunflowers", "Tulips"];
+
+        async function loadModel() {
+            console.log("TensorFlow :", tf.version.tfjs);
+            console.log("Loading model...");
             
-            document.getElementById("statusModel").innerHTML = "✅ Model berhasil dimuat";
-            document.getElementById("statusModel").className = "text-green-600 font-bold";
-        } catch (err) {
-            console.error(err);
-            document.getElementById("statusModel").innerHTML = "❌ " + err.message;
-            document.getElementById("statusModel").className = "text-red-600 font-bold";
-        }
-    }
-
-    // Pengecekan ketersediaan TF sebelum memuat model
-    if (typeof tf === "undefined") {
-        alert("TensorFlow.js gagal dimuat!");
-        return;
-    }
-    loadModel();
-
-    // =====================
-    // PREVIEW GAMBAR
-    // =====================
-    const input = document.getElementById("inputGambar");
-    const preview = document.getElementById("previewGambar");
-
-    if (input) {
-        input.addEventListener("change", function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                preview.onload = function() {
-                    console.log("Preview siap.");
-                };
-                preview.src = event.target.result;
-                preview.classList.remove("hidden");
+            try {
+                modelCNN = await tf.loadLayersModel(
+                    "https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json"
+                );
+                console.log("Model Loaded");
+                modelCNN.summary();
                 
-                const placeholder = document.getElementById("placeholderText");
-                if (placeholder) placeholder.classList.add("hidden");
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+                document.getElementById("statusModel").innerHTML = "✅ Model berhasil dimuat";
+                document.getElementById("statusModel").className = "text-green-600 font-bold";
+            } catch (err) {
+                console.error(err);
+                document.getElementById("statusModel").innerHTML = "❌ " + err.message;
+                document.getElementById("statusModel").className = "text-red-600 font-bold";
+            }
+        }
 
-    // =====================
-    // PREDIKSI KLASIFIKASI
-    // =====================
-    window.prediksiGambar = async function() {
-        if (modelCNN == null) {
-            alert("Model belum selesai dimuat.");
+        if (typeof tf === "undefined") {
+            alert("TensorFlow.js gagal dimuat!");
             return;
         }
+        loadModel();
 
-        if (preview.src === "") {
-            alert("Pilih gambar terlebih dahulu.");
-            return;
+        // =====================
+        // PREVIEW GAMBAR
+        // =====================
+        const input = document.getElementById("inputGambar");
+        const preview = document.getElementById("previewGambar");
+
+        if (input) {
+            input.addEventListener("change", function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    preview.src = event.target.result;
+                    preview.classList.remove("hidden");
+                    const placeholder = document.getElementById("placeholderText");
+                    if (placeholder) placeholder.classList.add("hidden");
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
-        if (!preview.complete) {
-            await preview.decode();
-        }
+        // =====================
+        // PREDIKSI KLASIFIKASI
+        // =====================
+        window.prediksiGambar = async function() {
+            if (modelCNN == null) {
+                alert("Model belum selesai dimuat.");
+                return;
+            }
 
-        const hasil = tf.tidy(() => {
-            const tensor = tf.browser.fromPixels(preview)
-                .resizeBilinear([128, 128])
-                .toFloat()
-                .div(255.0)
-                .expandDims();
+            // Validasi lebih aman
+            if (!preview.src || preview.classList.contains("hidden")) {
+                alert("Pilih gambar terlebih dahulu.");
+                return;
+            }
 
-            return modelCNN.predict(tensor);
-        });
+            if (!preview.complete) {
+                await preview.decode();
+            }
 
-        const probabilitas = await hasil.data();
-        hasil.dispose();
+            const hasil = tf.tidy(() => {
+                const tensor = tf.browser.fromPixels(preview)
+                    .resizeBilinear([128, 128])
+                    .toFloat()
+                    .div(255.0)
+                    .expandDims();
+                return modelCNN.predict(tensor);
+            });
 
-        const index = probabilitas.indexOf(Math.max(...probabilitas));
+            const probabilitas = await hasil.data();
+            
+            // Bersihkan Memori
+            hasil.dispose();
+            tf.disposeVariables(); 
 
-        const divHasil = document.getElementById("hasilKlasifikasi");
-        divHasil.classList.remove("hidden");
-        divHasil.innerHTML = `
-            <b>${classNames[index]}</b><br>
-            Akurasi : ${(probabilitas[index] * 100).toFixed(2)}%
-        `;
-    };
+            const index = probabilitas.indexOf(Math.max(...probabilitas));
 
-});
+            const divHasil = document.getElementById("hasilKlasifikasi");
+            divHasil.classList.remove("hidden");
+            divHasil.innerHTML = `<b>${classNames[index]}</b><br>Akurasi : ${(probabilitas[index] * 100).toFixed(2)}%`;
+        };
+    });
+    </script>
+</body>
+</html>
