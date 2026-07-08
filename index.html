@@ -1,4 +1,5 @@
-// Pastikan library TensorFlow.js sudah dimuat di <head> sebelum script ini
+// Pastikan di <head> HTML Anda sudah ada:
+// <script src="https://cdn.tailwindcss.com"></script>
 // <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -33,13 +34,17 @@ window.addEventListener("DOMContentLoaded", () => {
     const classNames = ["Daisy", "Dandelion", "Roses", "Sunflowers", "Tulips"];
 
     async function loadModel() {
+        console.log("TensorFlow :", tf.version.tfjs);
+        console.log("Loading model...");
+        
         try {
-            // URL menggunakan GitHub Pages agar file .bin terbaca dengan stabil
             modelCNN = await tf.loadLayersModel(
                 "https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json"
             );
 
-            console.log("Model berhasil dimuat");
+            console.log("Model Loaded");
+            modelCNN.summary();
+            
             document.getElementById("statusModel").innerHTML = "✅ Model berhasil dimuat";
             document.getElementById("statusModel").className = "text-green-600 font-bold";
         } catch (err) {
@@ -49,10 +54,12 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Panggil model saat window selesai dimuat
-    window.addEventListener("load", () => {
-        loadModel();
-    });
+    // Pengecekan ketersediaan TF sebelum memuat model
+    if (typeof tf === "undefined") {
+        alert("TensorFlow.js gagal dimuat!");
+        return;
+    }
+    loadModel();
 
     // =====================
     // PREVIEW GAMBAR
@@ -72,6 +79,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 };
                 preview.src = event.target.result;
                 preview.classList.remove("hidden");
+                
                 const placeholder = document.getElementById("placeholderText");
                 if (placeholder) placeholder.classList.add("hidden");
             };
@@ -93,12 +101,10 @@ window.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Pengecekan keamanan sebelum decode gambar
         if (!preview.complete) {
             await preview.decode();
         }
 
-        // Prediksi dengan efisiensi memori (tf.tidy)
         const hasil = tf.tidy(() => {
             const tensor = tf.browser.fromPixels(preview)
                 .resizeBilinear([128, 128])
@@ -110,8 +116,6 @@ window.addEventListener("DOMContentLoaded", () => {
         });
 
         const probabilitas = await hasil.data();
-        
-        // Membersihkan memori secara eksplisit
         hasil.dispose();
 
         const index = probabilitas.indexOf(Math.max(...probabilitas));
