@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tugas Besar Ilmu Data - AI Deployment</title>
-    <!-- Memuat Tailwind CSS untuk tampilan (Tanpa perlu install) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memuat TensorFlow.js untuk klasifikasi gambar -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans p-6 md:p-12">
@@ -19,7 +17,6 @@
 
         <div class="p-6 md:p-8 grid md:grid-cols-2 gap-8">
             
-            <!-- BAGIAN 1: REGRESI LINEAR -->
             <div class="bg-blue-50 p-6 rounded-lg border border-blue-100">
                 <h2 class="text-2xl font-semibold mb-4 text-blue-800">1. Prediksi Biaya Medis</h2>
                 <p class="text-sm text-gray-600 mb-4">Metode: Regresi Linear Berganda</p>
@@ -36,12 +33,10 @@
                     <button onclick="prediksiRegresi()" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition">Hitung Estimasi Biaya</button>
                     
                     <div id="hasilRegresi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-blue-900 shadow-inner hidden">
-                        <!-- Hasil regresi muncul di sini -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
-            <!-- BAGIAN 2: KLASIFIKASI GAMBAR -->
             <div class="bg-green-50 p-6 rounded-lg border border-green-100">
                 <h2 class="text-2xl font-semibold mb-4 text-green-800">2. Klasifikasi Gambar</h2>
                 <p class="text-sm text-gray-600 mb-4">Metode: Convolutional Neural Network (CNN)</p>
@@ -58,15 +53,13 @@
                     <button onclick="prediksiGambar()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-700 transition">Deteksi Gambar</button>
                     
                     <div id="hasilKlasifikasi" class="mt-4 p-4 bg-white rounded border text-center font-bold text-lg text-green-900 shadow-inner hidden">
-                        <!-- Hasil klasifikasi muncul di sini -->
-                    </div>
+                        </div>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT -->
     <script>
         // ==========================================
         // 1. LOGIKA REGRESI LINEAR
@@ -103,8 +96,8 @@
         // Fungsi memuat model dari folder 'tfjs_model'
         async function loadModel() {
             try {
-                // Menggunakan URL lengkap (Absolute URL) agar pasti ketemu dan tidak error 404
-                const modelUrl = 'https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json';
+                // JALAN PINTAS: Menggunakan URL Raw GitHub untuk menembus error 404 dari GitHub Pages
+                const modelUrl = 'https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json';
                 modelCNN = await tf.loadLayersModel(modelUrl);
                 
                 document.getElementById('statusModel').innerText = "✅ Model Gambar Siap Digunakan!";
