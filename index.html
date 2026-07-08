@@ -103,8 +103,10 @@
         // Fungsi memuat model dari folder 'tfjs_model'
         async function loadModel() {
             try {
-                // Penyesuaian path untuk GitHub Pages (menghapus awalan ./)
-                modelCNN = await tf.loadLayersModel('tfjs_model/model.json');
+                // Menggunakan URL lengkap (Absolute URL) agar pasti ketemu dan tidak error 404
+                const modelUrl = 'https://mora759.github.io/TubesIlmuDataLanjut/tfjs_model/model.json';
+                modelCNN = await tf.loadLayersModel(modelUrl);
+                
                 document.getElementById('statusModel').innerText = "✅ Model Gambar Siap Digunakan!";
                 document.getElementById('statusModel').className = "text-xs font-bold text-green-600 mb-4";
             } catch (error) {
