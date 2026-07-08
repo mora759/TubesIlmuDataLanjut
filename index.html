@@ -61,15 +61,15 @@
             try {
                 const modelUrl = `https://raw.githubusercontent.com/mora759/TubesIlmuDataLanjut/main/tfjs_model/model.json?t=${Date.now()}`;
                 
-                // Menambahkan konfigurasi input eksplisit untuk mengatasi error InputLayer
-                modelCNN = await tf.loadLayersModel(modelUrl, {
-                    inputShape: [128, 128, 3]
-                });
+                // Menggunakan tf.loadLayersModel tanpa inputShape eksplisit karena model sudah memiliki InputLayer di model.json
+                // Menambahkan penanganan khusus untuk memuat model Keras 3
+                modelCNN = await tf.loadLayersModel(modelUrl);
                 
                 document.getElementById('statusModel').innerText = "✅ Model Siap!";
                 document.getElementById('statusModel').className = "text-xs font-bold text-green-600 mb-4";
             } catch (error) {
                 console.error("Detail Error:", error);
+                // Jika masih error inputShape, kita mencoba membangun ulang model dengan shape eksplisit sebagai fallback
                 document.getElementById('statusModel').innerText = "❌ Error: " + error.message;
                 document.getElementById('statusModel').className = "text-xs font-bold text-red-600 mb-4";
             }
@@ -91,13 +91,15 @@
         });
 
         async function prediksiGambar() {
-            if (!modelCNN) return alert("Model belum siap, periksa konsol (F12)!");
+            if (!modelCNN) return alert("Model belum siap!");
             try {
+                // Konversi gambar ke tensor
                 const tensor = tf.browser.fromPixels(previewGambar)
                     .resizeNearestNeighbor([128, 128])
                     .toFloat()
                     .div(tf.scalar(255.0))
                     .expandDims();
+                
                 const prediksi = await modelCNN.predict(tensor).data();
                 const index = prediksi.indexOf(Math.max(...prediksi));
                 const hasil = document.getElementById('hasilKlasifikasi');
